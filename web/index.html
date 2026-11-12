@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Calculadora educativa de la tasa mínima que cubre el riesgo de un crédito, con tasa plana contra tasa por banda de PD.">
+<meta name="color-scheme" content="light dark">
+<title>Calculadora de pricing por riesgo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230071e3'/%3E%3Ctext x='8' y='12' font-size='11' text-anchor='middle' fill='white' font-family='sans-serif'%3E%25%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<a class="salto" href="#resultados">Ir a los resultados</a>
+<div class="mini" id="mini" aria-hidden="true"><span class="mini-etq">Tasa mínima anual</span><span class="mini-cifra" id="mini-cifra"></span></div>
+<div class="contenedor">
+  <header class="cabecera">
+    <div class="titulo revela">
+      <h1>Calculadora de pricing por riesgo</h1>
+      <p class="lead">Calcula la tasa mínima anual que cubre fondeo, pérdida esperada, gastos y el rendimiento del capital.</p>
+      <p class="discreto">Herramienta educativa: los resultados no son una tasa real ni una oferta de crédito. Las bandas de PD vienen de un ejercicio con datos públicos de tarjetas de Taiwán de 2005.</p>
+    </div>
+    <button type="button" id="tema" aria-label="Cambiar tema de color">Tema: automático</button>
+  </header>
+
+  <main id="principal">
+    <div class="disposicion">
+      <section class="heroe revela" id="resultados" tabindex="-1" aria-labelledby="t-res">
+        <h2 id="t-res" class="etiqueta-heroe">Tasa mínima anual</h2>
+        <p class="error" id="error" role="alert" hidden></p>
+        <div id="heroe-cuerpo" hidden>
+          <p class="cifra" id="h-tasa" aria-hidden="true"></p>
+          <p class="solo-lectores" id="h-tasa-sr" aria-live="polite"></p>
+          <p class="suave sub">Cubre fondeo, pérdida esperada, gastos y rendimiento del capital.</p>
+
+          <fieldset class="escenarios" id="escenarios">
+            <legend class="solo-lectores">Escenario</legend>
+            <div class="segmentado" id="segmentado">
+              <span class="pildora" aria-hidden="true"></span>
+              <label class="seg"><input type="radio" name="esc" value="0"><span class="seg-nombre">Optimista</span><span class="seg-valor" id="s-0"></span></label>
+              <label class="seg"><input type="radio" name="esc" value="1" checked><span class="seg-nombre">Base</span><span class="seg-valor" id="s-1"></span></label>
+              <label class="seg"><input type="radio" name="esc" value="2"><span class="seg-nombre">Estrés</span><span class="seg-valor" id="s-2"></span></label>
+            </div>
+            <p class="suave desc-esc" id="d-esc"></p>
+          </fieldset>
+
+          <dl class="comparacion">
+            <div><dt>Tasa plana</dt><dd id="h-plana"></dd></div>
+            <div><dt>Tasa mínima menos tasa plana</dt><dd id="h-dif"></dd></div>
+          </dl>
+          <p class="suave">Tasa plana: una sola tasa para toda la cartera, el promedio de las tasas mínimas de las cuatro bandas de riesgo.</p>
+        </div>
+      </section>
+
+      <section class="entradas revela" aria-labelledby="t-entradas">
+        <h2 id="t-entradas">Supuestos</h2>
+        <p class="suave">Porcentajes anuales, salvo el plazo. Los resultados se actualizan al mover un deslizador o escribir.</p>
+        <div class="campos" role="group" aria-labelledby="t-entradas">
+          <div class="campo">
+            <div class="campo-cab">
+              <label for="pd">PD a 12 meses</label>
+              <span class="control-num"><input type="number" id="pd" inputmode="decimal" step="any" min="0" max="100" aria-describedby="ayuda-pd falla-pd"><span class="unidad" aria-hidden="true">%</span></span>
+            </div>
+            <input type="range" class="deslizador" id="pd-r" data-campo="pd" min="0" max="100" step="0.5" aria-label="PD a 12 meses, deslizador" tabindex="0">
+            <div class="rango" aria-hidden="true"><span>0%</span><span>100%</span></div>
+            <span class="ayuda" id="ayuda-pd">Probabilidad de incumplir en un año. De 0 a 100.</span>
+            <span class="falla" id="falla-pd" role="alert"></span>
+          </div>
+          <div class="campo">
+            <div class="campo-cab">
+              <label for="lgd">LGD, pérdida si incumple</label>
+              <span class="control-num"><input type="number" id="lgd" inputmode="decimal" step="any" min="0" max="100" aria-describedby="ayuda-lgd falla-lgd"><span class="unidad" aria-hidden="true">%</span></span>
+            </div>
+            <input type="range" class="deslizador" id="lgd-r" data-campo="lgd" min="0" max="100" step="1" aria-label="LGD, pérdida si incumple, deslizador" tabindex="0">
+            <div class="rango" aria-hidden="true"><span>0%</span><span>100%</span></div>
+            <span class="ayuda" id="ayuda-lgd">Parte de la exposición que no se recupera. De 0 a 100.</span>
+            <span class="falla" id="falla-lgd" role="alert"></span>
+          </div>
+          <div class="campo">
+            <div class="campo-cab">
+              <label for="plazo">Plazo</label>
+              <span class="control-num"><input type="number" id="plazo" inputmode="numeric" step="1" min="1" max="360" aria-describedby="ayuda-plazo falla-plazo"><span class="unidad" aria-hidden="true">meses</span></span>
+            </div>
+            <input type="range" class="deslizador" id="plazo-r" data-campo="plazo" min="1" max="120" step="1" aria-label="Plazo, deslizador" tabindex="0">
+            <div class="rango" aria-hidden="true"><span>1 mes</span><span>120 meses</span></div>
+            <span class="ayuda" id="ayuda-plazo">Meses enteros, de 1 a 360. El deslizador llega a 120.</span>
+            <span class="falla" id="falla-plazo" role="alert"></span>
+          </div>
+        </div>
+        <button type="button" class="despliega" id="b-mas" aria-expanded="false" aria-controls="p-mas"><span>Más supuestos</span><span class="pista">Fondeo, gastos, capital y rendimiento</span></button>
+        <div class="pliegue" id="p-mas"><div class="pliegue-int">
+          <div class="campos" id="mas">
+          <div class="campo">
+            <div class="campo-cab">
+              <label for="fondeo">Costo de fondeo</label>
+              <span class="control-num"><input type="number" id="fondeo" inputmode="decimal" step="any" min="0" max="50" aria-describedby="ayuda-fondeo falla-fondeo"><span class="unidad" aria-hidden="true">%</span></span>
+            </div>
+            <input type="range" class="deslizador" id="fondeo-r" data-campo="fondeo" min="0" max="50" step="0.1" aria-label="Costo de fondeo, deslizador" tabindex="0">
+            <div class="rango" aria-hidden="true"><span>0%</span><span>50%</span></div>
+            <span class="ayuda" id="ayuda-fondeo">Tasa anual del dinero prestado. De 0 a 50.</span>
+            <span class="falla" id="falla-fondeo" role="alert"></span>
+          </div>
+          <div class="campo">
+            <div class="campo-cab">
+              <label for="gastos">Gastos operativos</label>
+              <span class="control-num"><input type="number" id="gastos" inputmode="decimal" step="any" min="0" max="50" aria-describedby="ayuda-gastos falla-gastos"><span class="unidad" aria-hidden="true">%</span></span>
+            </div>
+            <input type="range" class="deslizador" id="gastos-r" data-campo="gastos" min="0" max="50" step="0.1" aria-label="Gastos operativos, deslizador" tabindex="0">
+            <div class="rango" aria-hidden="true"><span>0%</span><span>50%</span></div>
+            <span class="ayuda" id="ayuda-gastos">Anual, sobre el saldo. De 0 a 50.</span>
+            <span class="falla" id="falla-gastos" role="alert"></span>
+          </div>
+          <div class="campo">
+            <div class="campo-cab">
+              <label for="capital">Capital asignado</label>
+              <span class="control-num"><input type="number" id="capital" inputmode="decimal" step="any" min="0" max="50" aria-describedby="ayuda-capital falla-capital"><span class="unidad" aria-hidden="true">%</span></span>
+            </div>
+            <input type="range" class="deslizador" id="capital-r" data-campo="capital" min="0" max="50" step="0.5" aria-label="Capital asignado, deslizador" tabindex="0">
+            <div class="rango" aria-hidden="true"><span>0%</span><span>50%</span></div>
+            <span class="ayuda" id="ayuda-capital">Parte de la exposición financiada con capital. De 0 a 50.</span>
+            <span class="falla" id="falla-capital" role="alert"></span>
+          </div>
+          <div class="campo">
+            <div class="campo-cab">
+              <label for="roe">Rendimiento exigido al capital</label>
+              <span class="control-num"><input type="number" id="roe" inputmode="decimal" step="any" min="0" max="100" aria-describedby="ayuda-roe falla-roe"><span class="unidad" aria-hidden="true">%</span></span>
+            </div>
+            <input type="range" class="deslizador" id="roe-r" data-campo="roe" min="0" max="100" step="0.5" aria-label="Rendimiento exigido al capital, deslizador" tabindex="0">
+            <div class="rango" aria-hidden="true"><span>0%</span><span>100%</span></div>
+            <span class="ayuda" id="ayuda-roe">Anual. De 0 a 100.</span>
+            <span class="falla" id="falla-roe" role="alert"></span>
+          </div>
+          </div>
+        </div></div>
+        <div class="acciones">
+          <button type="button" id="ejemplo" class="primario">Cargar el ejemplo del README</button>
+        </div>
+      </section>
+
+      <div class="resto" id="resto" hidden>
+        <section class="seccion revela" aria-labelledby="t-desglose">
+          <h2 id="t-desglose">De qué se compone la tasa mínima</h2>
+          <p class="suave" id="d-comp"></p>
+          <div class="barra" id="barra" role="img" aria-label="">
+            <span class="tramo t-a"></span><span class="tramo t-b"></span><span class="tramo t-c"></span><span class="tramo t-d"></span>
+          </div>
+          <ul class="componentes" id="componentes"></ul>
+          <button type="button" class="despliega chico" aria-expanded="false" aria-controls="p-comp"><span>Ver la tabla</span></button>
+          <div class="pliegue" id="p-comp"><div class="pliegue-int"><div class="tabla-envoltura" id="t-desglose-tabla"></div><div class="tabla-envoltura" id="t-esc-tabla"></div></div></div>
+        </section>
+
+        <section class="seccion revela" aria-labelledby="t-band">
+          <h2 id="t-band">Tasa plana contra tasa por banda</h2>
+          <p class="suave" id="d-band"></p>
+          <p class="suave">Subsidio cruzado: cuánto más (o menos) paga una banda con la tasa plana que lo que cuesta su propio riesgo. Las bandas de bajo riesgo pagan de más y cubren a las de alto riesgo.</p>
+          <div class="divergente" id="g-band" role="img" aria-label="">
+            <div class="fd-cab" aria-hidden="true"><span></span><span class="fd-ejes"><span>Paga menos</span><span>Paga de más</span></span><span></span></div>
+            <ul class="fd-lista" id="fd-lista"></ul>
+          </div>
+          <ul class="leyenda" id="l-band"></ul>
+          <button type="button" class="despliega chico" aria-expanded="false" aria-controls="p-band"><span>Ver la tabla</span></button>
+          <div class="pliegue" id="p-band"><div class="pliegue-int"><div class="tabla-envoltura" id="t-band-tabla"></div></div></div>
+          <p class="suave" id="n-band"></p>
+        </section>
+      </div>
+    </div>
+
+    <section class="seccion formulas revela" aria-labelledby="t-formulas">
+      <h2 id="t-formulas">Cómo se calcula</h2>
+      <button type="button" class="despliega" id="b-formulas" aria-expanded="false" aria-controls="p-formulas"><span>Ver el ejemplo con números y las fórmulas</span></button>
+      <div class="pliegue" id="p-formulas"><div class="pliegue-int">
+        <h3>Ejemplo con números</h3>
+        <p class="suave">PD 5%, LGD 45%, fondeo 9%, gastos 3%, capital asignado 10%, rendimiento exigido 15% y plazo de 24 meses.</p>
+        <div class="formula">PD acumulada = 1 - (1 - 0.05)^2 = 9.75%
+pérdida esperada anual = 45% x 9.75% / 2 = 2.19375%
+fondeo = 9% x (1 - 10%) = 8.1%
+capital = 10% x 15% = 1.5%
+tasa mínima = 8.1% + 2.19375% + 3% + 1.5% = 14.79375%</div>
+        <h3>Fórmulas</h3>
+        <p>Se supone un crédito de pago único al vencimiento, con exposición constante y una tasa de incumplimiento constante en el tiempo. Con T igual al plazo entre 12:</p>
+        <div class="formula">PD acumulada = 1 - (1 - PD)^T
+pérdida esperada anual = LGD x PD acumulada / T
+fondeo = costo de fondeo x (1 - capital asignado)
+capital = capital asignado x rendimiento exigido
+tasa mínima = fondeo + pérdida esperada + gastos + capital</div>
+        <h3>Términos</h3>
+        <dl class="glosario">
+          <dt>PD</dt><dd>Probabilidad de incumplimiento: qué tan probable es que el cliente deje de pagar en un año.</dd>
+          <dt>LGD</dt><dd>Pérdida dado el incumplimiento: la parte de lo prestado que no se recupera cuando el cliente no paga.</dd>
+          <dt>Subsidio cruzado</dt><dd>Diferencia entre lo que paga una banda con la tasa plana y lo que cuesta su riesgo.</dd>
+        </dl>
+        <p class="suave">El README del proyecto explica cada paso con un ejemplo numérico que verifican las pruebas.</p>
+      </div></div>
+    </section>
+  </main>
+  <footer>
+    <p>Las bandas de PD vienen del proyecto riesgo-credito-politicas, hecho con la base pública UCI Default of Credit Card Clients (Yeh y Lien, 2009). No hay datos de ningún banco. Licencia MIT.</p>
+  </footer>
+</div>
+<script src="formulas.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

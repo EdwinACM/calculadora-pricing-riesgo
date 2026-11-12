@@ -1,0 +1,10 @@
+{
+  "name": "calculadora-pricing-riesgo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Calculadora educativa de pricing por riesgo. Sin dependencias.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/formulas.test.js"
+  }
+}
